@@ -22,7 +22,6 @@ int batteryVal = 0;
 
 // Sonar
 #define sonarPin A1
-#define sonarTriggerPin A3
 unsigned int sonarVal = 0;
 double sonarFeet = 100;
 
@@ -36,26 +35,48 @@ SDWaveFile wav = NULL;
  *  OLED
  *  pins 19, 20 hardwired to ground: 4-wire serial interface
  */
-#define oledRegPin 8 // pin4 on OLED; (used to be 1 on MKR)
-#define oledClockPin 5 // pin7 on OLED
-#define oledDataPin 10 // pin8 on OLED; (used to be 0 on MKR)
+#define oledRegPin A5 // pin4 on OLED
 #define oledResetPin A2 // pin16 on OLED
 #define oledChipPin 4 // pin17 on OLED
+
+// Parallel interface
+#define oledReadWritePin A3 // pin5 on OLED
+#define oledOperationEnablePin A4 // pin6 on OLED
+#define oledDataPin0 12 // pin7 on OLED
+#define oledDataPin1 11 // pin8 on OLED
+#define oledDataPin2 10 // pin9 on OLED
+#define oledDataPin3 9 // pin10 on OLED
+#define oledDataPin4 8 // pin11 on OLED
+#define oledDataPin5 7 // pin12 on OLED
+#define oledDataPin6 6 // pin13 on OLED
+#define oledDataPin7 5 // pin14 on OLED
+
+// Serial interface
+//#define oledClockPin 5 // pin7 on OLED
+//#define oledDataPin 10 // pin8 on OLED
 
 void setup() {
   Serial.begin(9600);
   
   pinMode(sonarPin, INPUT);
-  pinMode(sonarTriggerPin, OUTPUT);
   
-  digitalWrite(sonarTriggerPin, LOW);
-
   pinMode(oledRegPin, OUTPUT);
-  pinMode(oledClockPin, OUTPUT);
-  pinMode(oledDataPin, OUTPUT);
   pinMode(oledResetPin, OUTPUT);
   pinMode(oledChipPin, OUTPUT);
-  
+  // Parallel interface
+  pinMode(oledReadWritePin, OUTPUT);
+  pinMode(oledOperationEnablePin, OUTPUT);
+  pinMode(oledDataPin0, OUTPUT);
+  pinMode(oledDataPin1, OUTPUT);
+  pinMode(oledDataPin2, OUTPUT);
+  pinMode(oledDataPin3, OUTPUT);
+  pinMode(oledDataPin4, OUTPUT);
+  pinMode(oledDataPin5, OUTPUT);
+  pinMode(oledDataPin6, OUTPUT);
+  pinMode(oledDataPin7, OUTPUT);
+  // Serial interface
+  //pinMode(oledClockPin, OUTPUT);
+  //pinMode(oledDataPin, OUTPUT);
   digitalWrite(oledResetPin, LOW);
   delay(30);
   digitalWrite(oledResetPin, HIGH);
@@ -101,8 +122,8 @@ void loop() {
   Serial.println(sonarFeet);
 
   oledGo(String(sonarFeet, 1));
-  if (sonarFeet < 6.5)
-      speakerGo();
+  //if (sonarFeet < 1.5)
+    //speakerGo();
     
   // Battery
   /*batteryVal = analogRead(ADC_BATTERY);
@@ -146,10 +167,8 @@ void oledGo(String str) {
       for (col=0; col<width_cols; col++) {
         oledData(char_pixels[byte_counter]);
         byte_counter++;
-        delayMicroseconds(100);
         oledData(char_pixels[byte_counter]);
         byte_counter++;
-        delayMicroseconds(100);
       }
     }
     row_start = 0;
@@ -157,13 +176,78 @@ void oledGo(String str) {
     col_start += width_cols;
     col_end += width_cols;
   }
+  delay(300);
 }
 
 void oledData(unsigned char d) {
   unsigned int n;
   digitalWrite(oledChipPin, LOW); 
-  digitalWrite(oledRegPin, HIGH); 
-  for(n=0;n<8;n++){
+  digitalWrite(oledRegPin, HIGH);
+  digitalWrite(oledReadWritePin, LOW);
+
+  // Parallel interface
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin7, HIGH);
+  else
+    digitalWrite(oledDataPin7, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin6, HIGH);
+  else
+    digitalWrite(oledDataPin6, LOW);
+  while(0);
+  d=(d<<1);
+  
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin5, HIGH);
+  else
+    digitalWrite(oledDataPin5, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin4, HIGH);
+  else
+    digitalWrite(oledDataPin4, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin3, HIGH);
+  else
+    digitalWrite(oledDataPin3, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin2, HIGH);
+  else
+    digitalWrite(oledDataPin2, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin1, HIGH);
+  else
+    digitalWrite(oledDataPin1, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin0, HIGH);
+  else
+    digitalWrite(oledDataPin0, LOW);
+  while(0);
+  d=(d<<1);
+
+  digitalWrite(oledOperationEnablePin, HIGH);
+  while(0);
+  digitalWrite(oledOperationEnablePin, LOW);
+  
+  // Series interface
+  /*for(n=0;n<8;n++){
     if((d&0x80)==0x80)
       digitalWrite(oledDataPin, HIGH);
     else
@@ -176,7 +260,7 @@ void oledData(unsigned char d) {
     digitalWrite(oledClockPin, HIGH);
     while(0);
     digitalWrite(oledClockPin, LOW); 
-  }
+  }*/
   digitalWrite(oledChipPin, HIGH);
 }
 
@@ -184,7 +268,71 @@ void oledCommand(unsigned char d) {
   unsigned int n;
   digitalWrite(oledChipPin, LOW); 
   digitalWrite(oledRegPin, LOW); 
-  for(n=0;n<8;n++){
+  digitalWrite(oledReadWritePin, LOW);
+
+  // Parallel interface
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin7, HIGH);
+  else
+      digitalWrite(oledDataPin7, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin6, HIGH);
+  else
+    digitalWrite(oledDataPin6, LOW);
+  while(0);
+  d=(d<<1);
+  
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin5, HIGH);
+  else
+    digitalWrite(oledDataPin5, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin4, HIGH);
+  else
+    digitalWrite(oledDataPin4, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin3, HIGH);
+  else
+    digitalWrite(oledDataPin3, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin2, HIGH);
+  else
+    digitalWrite(oledDataPin2, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin1, HIGH);
+  else
+    digitalWrite(oledDataPin1, LOW);
+  while(0);
+  d=(d<<1);
+
+  if((d&0x80)==0x80)
+    digitalWrite(oledDataPin0, HIGH);
+  else
+    digitalWrite(oledDataPin0, LOW);
+  while(0);
+  d=(d<<1);
+
+  digitalWrite(oledOperationEnablePin, HIGH);
+  while(0);
+  digitalWrite(oledOperationEnablePin, LOW);
+  
+  // Serial interface
+  /*for(n=0;n<8;n++){
     if((d&0x80)==0x80)
       digitalWrite(oledDataPin, HIGH);
     else
@@ -197,7 +345,8 @@ void oledCommand(unsigned char d) {
     digitalWrite(oledClockPin, HIGH);
     while(0);
     digitalWrite(oledClockPin, LOW);
-  }
+  }*/
+  
   digitalWrite(oledChipPin, HIGH);
 }
 
@@ -240,7 +389,7 @@ void setDisplayOffset(unsigned char a) {
 
 void displayMode(unsigned char a)
 {
-  oledCommand(a);     // 0xA4 => Entire Display OFF 
+  oledCommand(a); // 0xA4 => Entire Display OFF 
                   // 0xA5 => Entire Display ON, all pixels Grayscale level 15
                   // 0xA6 => Normal Display (Default)
                   // 0xA7 => Inverse Display
@@ -342,7 +491,7 @@ void oledInit() {
   setGPIO(0x00); // Set GPIO 
   functionSelection(0x00); // Function Selection
   enableExternalVSL(0xA0,0xB5); // Enable External VSL
-  setContrastControl(0x9F); // Set Contrast Control
+  setContrastControl(0x7F); // Set Contrast Control
   masterContrastControl(0x0F); // Master Contrast Control
   defaultGrayscaleCommand(); // Default Linear Grayscale Table
   setPhaseLength(0x74); // Set Phase Length
